@@ -25,7 +25,7 @@ public interface UserServices {
 	
 	// dlt user by id --->>
 	
-	User dltById( String userId);
+	  void dltById( String userId);
 	
 	// update the user--->>
 	
