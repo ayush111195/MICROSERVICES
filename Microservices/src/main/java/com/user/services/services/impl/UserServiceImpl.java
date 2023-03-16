@@ -19,6 +19,7 @@ import com.user.services.entites.Hotel;
 import com.user.services.entites.Rating;
 import com.user.services.entites.User;
 import com.user.services.exceptions.ResourceNotFindException;
+import com.user.services.external.services.HotelService;
 import com.user.services.repositories.UserRepository;
 import com.user.services.services.UserServices;
 
@@ -31,8 +32,8 @@ public class UserServiceImpl implements UserServices {
 	@Autowired
 	private RestTemplate restTemplate;
 	
-//	@Autowired
-//	private Logger logger=LoggerFactory.getLogger(UserServiceImpl.class);
+	@Autowired
+	private HotelService hotelService;
 	
 
 	private Logger logger=LoggerFactory.getLogger(UserServiceImpl.class);
@@ -42,7 +43,7 @@ public class UserServiceImpl implements UserServices {
 	
 		String rendomUserId = UUID.randomUUID().toString();
 		
-		//generated unique id --->>
+//generated unique id --->>
 		
 		user.setUserId(rendomUserId);
 		return this.userRepository.save(user);
@@ -60,39 +61,50 @@ public class UserServiceImpl implements UserServices {
 	@Override
 	public User getById(String userId) {
 
-		//get the user from database with the help of user repositry--->>>
+//       get the user from database with the help of user repositry--->>>
 	
 		 User  user= this.userRepository.findById(userId).orElseThrow(()-> new ResourceNotFindException("User Is Given Id Is Not Found On Server!! :"+userId));
 		 
-		 // fetch rating of the above user from rating service---->>>
-		 //http://localhost:8083/rating/user5ce623e3-85f4-417f-8f98-20dd8a7b3fbd
+//       fetch rating of the above user from rating service---->>>
+//       http://localhost:8083/rating/user5ce623e3-85f4-417f-8f98-20dd8a7b3fbd
 		 
-	//	 Rating[] ratingOfUser = restTemplate.getForObject("http://localhost:8083/rating/user"+user.getUserId(),Rating[].class);
+//	     Rating[] ratingOfUser = restTemplate.getForObject("http://localhost:8083/rating/user"+user.getUserId(),Rating[].class);
 		 Rating[] ratingOfUser = restTemplate.getForObject("http://RATING-SERVICE/rating/user"+user.getUserId(),Rating[].class);
+		 
 		 logger.info("{}",ratingOfUser);
 		 
-		List<Rating> ratings= Arrays.stream(ratingOfUser).toList();
+		 List<Rating> ratings= Arrays.stream(ratingOfUser).toList();
+		 
+//	     fetch rating of the above user from hotel service---->>>
 		 
 		 List<Rating>ratingList=ratings.stream().map(rating ->{
-			//api call to hotel services to get the hotel---->>>
-			// http://localhost:8082/hotels/c59f8b0b-9eca-43d8-bad9-8b2ced5a2491
-			 System.out.println(rating.getHotelId());
-	//	ResponseEntity<Hotel> forEntity=	 restTemplate.getForEntity("http://localhost:8082/hotels/"+rating.getHotelId(),Hotel.class);
-		ResponseEntity<Hotel> forEntity=	 restTemplate.getForEntity("http://HOTEL-SERVICE/hotels/"+rating.getHotelId(),Hotel.class);
-		  Hotel hotel=forEntity.getBody();
-		  logger.info("responce status code:{}",forEntity.getStatusCode());
+			 
+//       api call to hotel services to get the hotel---->>>
+			 
+//       http://localhost:8082/hotels/c59f8b0b-9eca-43d8-bad9-8b2ced5a2491
+//		 System.out.println(rating.getHotelId());
+//		 ResponseEntity<Hotel> forEntity=	 restTemplate.getForEntity("http://localhost:8082/hotels/"+rating.getHotelId(),Hotel.class);
+//		 ResponseEntity<Hotel> forEntity=	 restTemplate.getForEntity("http://HOTEL-SERVICE/hotels/"+rating.getHotelId(),Hotel.class);
+//		 Hotel hotel=forEntity.getBody();
+//		 logger.info("responce status code:{}",forEntity.getStatusCode());
 		  
-		 // set the hotel to rating --->>
+//       with the help of feign---->>>
+			 
+		 Hotel hotel=hotelService.getHotel(rating.getHotelId());
+			 
+			 
+//       set the hotel to rating --->>
 		  
-		  rating.setHotel(hotel);
+		 rating.setHotel(hotel);
 		 
-		  //return the rating--->>
+//       return the rating--->>
 		  
-		  return rating;
+		 return rating;
 		  
 		 }).collect(Collectors.toList());
 		 
 		 user.setRatings(ratingList);
+		 
 		  return user;
 		
 	
