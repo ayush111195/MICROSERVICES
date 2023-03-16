@@ -64,11 +64,11 @@ public class UserServiceImpl implements UserServices {
 	
 		 User  user= this.userRepository.findById(userId).orElseThrow(()-> new ResourceNotFindException("User Is Given Id Is Not Found On Server!! :"+userId));
 		 
-		// fetch rating of the above user from rating service---->>>
+		 // fetch rating of the above user from rating service---->>>
 		 //http://localhost:8083/rating/user5ce623e3-85f4-417f-8f98-20dd8a7b3fbd
 		 
-		 Rating[] ratingOfUser = restTemplate.getForObject("http://localhost:8083/rating/user"+user.getUserId(),Rating[].class);
-		 
+	//	 Rating[] ratingOfUser = restTemplate.getForObject("http://localhost:8083/rating/user"+user.getUserId(),Rating[].class);
+		 Rating[] ratingOfUser = restTemplate.getForObject("http://RATING-SERVICE/rating/user"+user.getUserId(),Rating[].class);
 		 logger.info("{}",ratingOfUser);
 		 
 		List<Rating> ratings= Arrays.stream(ratingOfUser).toList();
@@ -77,7 +77,8 @@ public class UserServiceImpl implements UserServices {
 			//api call to hotel services to get the hotel---->>>
 			// http://localhost:8082/hotels/c59f8b0b-9eca-43d8-bad9-8b2ced5a2491
 			 System.out.println(rating.getHotelId());
-		ResponseEntity<Hotel> forEntity=	 restTemplate.getForEntity("http://localhost:8082/hotels/"+rating.getHotelId(),Hotel.class);
+	//	ResponseEntity<Hotel> forEntity=	 restTemplate.getForEntity("http://localhost:8082/hotels/"+rating.getHotelId(),Hotel.class);
+		ResponseEntity<Hotel> forEntity=	 restTemplate.getForEntity("http://HOTEL-SERVICE/hotels/"+rating.getHotelId(),Hotel.class);
 		  Hotel hotel=forEntity.getBody();
 		  logger.info("responce status code:{}",forEntity.getStatusCode());
 		  
