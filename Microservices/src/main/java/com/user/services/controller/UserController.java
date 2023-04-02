@@ -18,6 +18,8 @@ import com.user.services.entites.User;
 import com.user.services.services.UserServices;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.Builder;
 
 @RestController
@@ -40,10 +42,18 @@ public class UserController {
 	}
 
 	// get user by id---->>
-
+     
+	int retryCount=1;
 	@GetMapping("/{userId}")
-	@CircuitBreaker(name="RATING_HOTEL_BREAKER",fallbackMethod = "RATING_HOTEL_FALLBACK")
+//	@CircuitBreaker(name="RATING_HOTEL_BREAKER",fallbackMethod = "RATING_HOTEL_FALLBACK")
+	
+//	@Retry(name="RATING_HOTEL_BREAKER",fallbackMethod = "RATING_HOTEL_FALLBACK")
+	
+	@RateLimiter(name="userRateLimiter",fallbackMethod = "RATING_HOTEL_FALLBACK")
+	
 	public ResponseEntity<User> getSingleUser(@PathVariable String userId) {
+		logger.info("Retry Count: {}",retryCount);
+		retryCount++;
 		User byId = userServices.getById(userId);
 		return ResponseEntity.ok(byId);
 	}
@@ -52,12 +62,12 @@ public class UserController {
 	
 	public ResponseEntity<User>RATING_HOTEL_FALLBACK(String userId,Exception ex){
 		
-		logger.info("FALLBACK IS EXECUTED BECAUSE SERVICE IS DOWN :" , ex.getMessage());
+	//	logger.info("FALLBACK IS EXECUTED BECAUSE SERVICE IS DOWN :" , ex.getMessage());
 	
 		User user=User.builder()
-				.email("AYUSSH")
-				.name("AYUSSH")
-				.about("AYUSSH")
+				.email("dummy@gmail.com")
+				.name("Dummy")
+				.about("This user created dummy because some service is down")
 				.userId("AYUSSH")
 				.build();
 		
